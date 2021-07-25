@@ -1,0 +1,19 @@
+{
+  "name": "grid-system",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "browser-sync": "^2.27.4",
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-sass": "^5.0.0"
+  },
+  "scripts": {
+    "dev": "gulp"
+  },
+  "dependencies": {
+    "node-sass": "^6.0.1",
+    "sass": "^1.35.1"
+  }
+}
