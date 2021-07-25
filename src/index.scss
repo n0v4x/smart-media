@@ -1,18 +1,22 @@
-$media-expressions: (
-  table: width "<=" 768px,
+$predefined-media-expressions: (
+  tablet: width gt 800px,
 );
 
-$unit-intervals: (
-  "px": 1,
-  "em": 0.01,
-  "rem": 0.1,
-  "": 0,
+$media-comparison-operators: (
+  ">",
+  ">=",
+  "<",
+  "<=",
+  "==",
+  "lt",
+  "le",
+  "gt",
+  "ge",
+  "eq"
 );
-
-$media-comparison-operators: (">", ">=", "<" "<=", "==");
 $media-logical-operators: ("or", "and");
 
-$media-range-features: (
+$MEDIA_RANGE_FEATURES: (
   "width",
   "height",
   "device-width",
@@ -32,13 +36,16 @@ $media-range-features: (
 }
 
 @function is-range-media-feature-name($feature-name) {
-  @return index($media-range-features, $feature-name) != null;
+  @return index($MEDIA_RANGE_FEATURES, $feature-name) != null;
 }
 
+// $LESS_OPERATOR_SIGNS: ("<", "lt");
+// $LESS_GRATER_SIGNS: ()
+
 @function get-range-media-feature-prefix($comparison-operator) {
-  @if index(("<", "<="), $comparison-operator) != null {
+  @if index(("<", "<=", "lt", "le"), $comparison-operator) != null {
     @return "max-";
-  } @else if index((">", ">="), $comparison-operator) != null {
+  } @else if index((">", ">=", "gt", "ge"), $comparison-operator) != null {
     @return "min-";
   }
 
@@ -46,9 +53,9 @@ $media-range-features: (
 }
 
 @function normalize-media-feature-value($comparison-operator, $value) {
-  @if $comparison-operator == ">" {
+  @if index((">", "gt"), $comparison-operator) != null {
     @return $value + 1px;
-  } @else if $comparison-operator == "<" {
+  } @else if index(("<", "lt"), $comparison-operator) != null {
     @return $value - 1px;
   }
 
@@ -59,10 +66,6 @@ $media-range-features: (
   $comparison-operator,
   $media-feature-name
 ) {
-  $media-feature-value: normalize-media-feature-value(
-    $comparison-operator,
-    $media-feature-value
-  );
   $media-feature-name-prefix: get-range-media-feature-prefix(
     $comparison-operator
   );
@@ -94,17 +97,20 @@ $media-range-features: (
 @function parse-media-query($expression) {
   $media-query: null;
 
+  // @debug "------------------------------------";
+  @debug type-of($value: $expression);
+
   @if type-of($expression) == "list" {
-    $media-feature-name: nth($conditions, 1);
+    $media-feature-name: nth($expression, 1);
     $media-feature-value: null;
     $comparison-operator: null;
 
     @if length($expression) == 3 {
-      $comparison-operator: nth($conditions, 2);
-      $media-feature-value: nth($conditions, 3);
+      $comparison-operator: nth($expression, 2);
+      $media-feature-value: nth($expression, 3);
 
       @if not is-valid-comparison-operator($comparison-operator) {
-        @error "Error: comparison operator is not valid: #{$comparison-operator}";
+        @error "Comparison operator '#{$comparison-operator}' is not valid";
       }
 
       @if is-range-media-feature-name($media-feature-name) {
@@ -113,76 +119,47 @@ $media-range-features: (
           $media-feature-name
         );
       } @else {
-        @if not $comparison-operator == "==" {
-          @error "Error: media feature is not range type (doesn't have min/max prefix)";
+        @if index(("==", "eq"), $comparison-operator) == null {
+          @error "Media feature is not range type (doesn't have min/max prefix)";
         }
       }
     } @else if length($expression) == 2 {
-      $media-feature-value: nth($conditions, 2);
+      $media-feature-value: nth($expression, 2);
     } @else if length($expression) == 1 {
+      @return parse-media-query(nth($expression, 1));
     }
-    // $media-query: "(#{$media-feature-name}: #{$media-feature-value})";
-  } @else if type-of($expression) == "string" {
-    $expression: map-get($media-expressions, $expression);
 
-    @if $expression == null {
+    @return "(#{$media-feature-name}: #{$media-feature-value})";
+  } @else if type-of($expression) == "string" {
+    $predefined-media-expression: map-get(
+      $predefined-media-expressions,
+      $expression
+    );
+
+    @if $predefined-media-expression == null {
       @return $expression;
     }
 
-    @return parse-media-query($expression);
+    @return parse-media-query($predefined-media-expression);
   } @else {
     @error "Type error: expression '#{$expression}' should be list or string type";
   }
 }
 
-@mixin media($conditions...) {
-  @if (has-list($conditions)) {
-  } @else {
-  }
+@mixin media($expressions...) {
+  $media-queries: null;
 
-  $media-queries: ();
-
-  // @each $arg in $args {
-  // }
-
-  @if (type-of($conditions) == "list") {
-    $media-query: null;
-
-    @if (length($conditions) == 3) {
-      $media-feature-name: nth($conditions, 1);
-      $comparison-operator: nth($conditions, 2);
-      $media-feature-value: nth($conditions, 3);
-
-      @if is-range-media-feature-name($media-feature-name) {
-        $media-feature-value: normalize-media-feature-value(
-          $comparison-operator,
-          $media-feature-value
-        );
-        $media-feature-name-prefix: get-range-media-feature-prefix(
-          $comparison-operator
-        );
-        $media-feature-name: "#{$media-feature-name-prefix}#{$media-feature-name}";
-      } @else {
-        @if not $comparison-operator == "==" {
-          @error "media feature is not range type (doesn't have min/max prefix)";
-        }
-      }
-
-      $media-query: "(#{$media-feature-name}: #{$media-feature-value})";
-    } @else if length($conditions) == 2 {
-      $media-feature-name: nth($conditions, 1);
-      $media-feature-value: nth($conditions, 2);
-
-      $media-query: "(#{$media-feature-name}: #{$media-feature-value})";
-    }
-
-    $media-queries: append($media-queries, $media-query);
+  @each $expression in $expressions {
+    $media-queries: append($media-queries, parse-media-query($expression));
   }
 
   @media #{$media-queries} {
     @content;
   }
 }
-
 // @debug index($media-comparison-operators, "<");
-@include media(((width ">" 768px) "or" screen) "and" width "<" 800px);
+@include media(tablet) {
+  .test {
+    color: red;
+  }
+}
