@@ -16,6 +16,80 @@ $media-comparison-operators: (
 );
 $media-logical-operators: ("or", "and");
 
+$LT_OP: "<";
+$GT_OP: ">";
+$GE_OP: ">=";
+$LE_OP: "<=";
+$EQ_OP: "==";
+$AND_OP: "and";
+$OR_OP: "or";
+
+$OPERATORS_PRECEDENCES: (
+  $OR_OP: 0,
+  $AND_OP: 1,
+  $LT_OP: 2,
+  $GT_OP: 2,
+  $GE_OP: 2,
+  $LE_OP: 2,
+  $EQ_OP: 2,
+);
+
+$OPERATORS: join((), $LT_OP $GT_OP $GE_OP $LE_OP $EQ_OP $AND_OP $OR_OP, comma);
+
+@function is-operator($maybe-operator) {
+  @return index($OPERATORS, $maybe-operator) != null;
+}
+
+@function get-operator-precedence($operator) {
+  @if not is-operator($operator) {
+    @error '"#{$operator}" is not an operator';
+  }
+
+  @return map-get($OPERATORS_PRECEDENCES, $operator);
+}
+
+@function push($list, $item, $separator: list-separator($list)) {
+  @return append($list, $item, $separator);
+}
+
+@function pop($list) {
+  $result: ();
+  $separator: list-separator($list);
+
+  @if length($list) > 1 {
+    @for $i from 1 through length($list) - 1 {
+      $result: append($result, nth($list, $i), $separator);
+    }
+  }
+
+  @return $result;
+}
+
+@function last($list) {
+  $last-index: length($list);
+
+  @if $last-index < 1 {
+    @return null;
+  }
+
+  @return nth($list, $last-index);
+}
+
+@function reverse($list, $separator: list-separator($list)) {
+  $result: ();
+  $list-length: length($list);
+
+  @if $list-length > 1 {
+    @for $i from $list-length through 1 {
+      $result: push($result, nth($list, $i), $separator);
+    }
+  } @else {
+    $result: $list;
+  }
+
+  @return $result;
+}
+
 $MEDIA_RANGE_FEATURES: (
   "width",
   "height",
@@ -94,6 +168,73 @@ $MEDIA_RANGE_FEATURES: (
   }
 }
 
+@function normalize-infix($infix) {
+  $result: ();
+
+  @each $item in $infix {
+    @if type-of($item) == "list" {
+      $result: push($result, "(");
+
+      @each $sub-item in normalize-infix($item) {
+        $result: push($result, $sub-item);
+      }
+
+      $result: push($result, ")");
+    } @else {
+      $result: push($result, $item);
+    }
+  }
+
+  @return $result;
+}
+
+@function to-postfix($infix-list) {
+  $normalized-infix-list: normalize-infix($infix-list);
+  $postfix: ();
+  $operators-stack: ();
+
+  @each $item in $normalized-infix-list {
+    @if (is-operator($item)) {
+      $operator-1: $item;
+      $operator-2: last($operators-stack);
+
+      @while (
+        is-operator($operator-2) and
+          (
+            get-operator-precedence($operator-1) <=
+              get-operator-precedence($operator-2)
+          )
+      ) {
+        $postfix: push($postfix, $operator-2);
+        $operators-stack: pop($operators-stack);
+        $operator-2: last($operators-stack);
+      }
+
+      $operators-stack: push($operators-stack, $operator-1);
+    } @else if $item == "(" {
+      $operators-stack: push($operators-stack, $item);
+    } @else if $item == ")" {
+      @while last($operators-stack) != "(" {
+        $postfix: push($postfix, last($operators-stack));
+        $operators-stack: pop($operators-stack);
+      }
+
+      // remove ")"
+      $operators-stack: pop($operators-stack);
+    } @else {
+      $postfix: push($postfix, $item);
+    }
+
+    @debug $operators-stack $postfix;
+  }
+
+  @each $operator in reverse($operators-stack) {
+    $postfix: push($postfix, $operator);
+  }
+
+  @return $postfix;
+}
+
 @function parse-media-query($expression) {
   $media-query: null;
 
@@ -157,8 +298,28 @@ $MEDIA_RANGE_FEATURES: (
     @content;
   }
 }
+
+@debug $OPERATORS_PRECEDENCES;
+.debug {
+  $list: 1 2 3 4 5 6;
+  list: $list;
+  pop: pop((1 2));
+  push: push((), 3);
+  last: last(());
+  operators: $OPERATORS;
+  before-reverse: 1 2 3, 4 5;
+  after-reverse: reverse((1 2 3, 4 5));
+  infix: (width "<=" 500px "or" width "<=" 1000px "or" width "<=" 600px);
+  posfix: to-postfix(
+    (width "<=" 500px "or" width "<=" 1000px) "and" width "<=" 600px "and"
+      (width "<=" 700 "or" width "<=" 800px)
+  );
+  normalized-inifix: normalize-infix(
+    (width "<=" 500px "or" width "<=" 1000px) "and" width "<=" 600px
+  );
+}
 // @debug index($media-comparison-operators, "<");
-@include media(tablet) {
+@include media(desktop) {
   .test {
     color: red;
   }
