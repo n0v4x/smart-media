@@ -34,10 +34,50 @@ $OPERATORS_PRECEDENCES: (
   $EQ_OP: 2,
 );
 
+$OPERATORS_WITH_TWO_OPERANDS: ($LT_OP, $GT_OP, $GE_OP, $LE_OP, $AND_OP, $OR_OP);
+
+$COMPARISON_OPERATORS: ($LT_OP, $GT_OP, $GE_OP, $LE_OP, $EQ_OP);
+
+$LOGICAL_OPERATORS: ($AND_OP, $OR_OP);
+
 $OPERATORS: join((), $LT_OP $GT_OP $GE_OP $LE_OP $EQ_OP $AND_OP $OR_OP, comma);
+
+$MEDIA_RANGE_FEATURES: (
+  "width",
+  "height",
+  "device-width",
+  "device-height",
+  "aspect-ratio",
+  "device-aspect-ratio" "color",
+  "color-index",
+  "monochrome",
+  "resolution"
+);
+
+$MEDIA_FEATURES: join((), $MEDIA_RANGE_FEATURES, comma);
+
+@function is-media-feature($maybe-media-feature) {
+  @return index($MEDIA_FEATURES, $maybe-media-feature) != null;
+}
+
+@function is-range-media-feature($maybe-range-media-feature) {
+  @return index($MEDIA_RANGE_FEATURES, $maybe-range-media-feature) != null;
+}
 
 @function is-operator($maybe-operator) {
   @return index($OPERATORS, $maybe-operator) != null;
+}
+
+@function is-operator-have-two-operands($operator) {
+  @return index($OPERATORS_WITH_TWO_OPERANDS, $operator) != null;
+}
+
+@function is-comparison-operator($maybe-comparison-operator) {
+  @return index($COMPARISON_OPERATORS, $maybe-comparison-operator);
+}
+
+@function is-logical-operator($maybe-logical-operator) {
+  @return index($LOGICAL_OPERATORS, $maybe-logical-operator);
 }
 
 @function get-operator-precedence($operator) {
@@ -90,27 +130,11 @@ $OPERATORS: join((), $LT_OP $GT_OP $GE_OP $LE_OP $EQ_OP $AND_OP $OR_OP, comma);
   @return $result;
 }
 
-$MEDIA_RANGE_FEATURES: (
-  "width",
-  "height",
-  "device-width",
-  "device-height",
-  "aspect-ratio",
-  "device-aspect-ratio" "color",
-  "color-index",
-  "monochrome",
-  "resolution"
-);
-
 @function media-parse-expression($expression) {
 }
 
 @function is-valid-comparison-operator($comparison-operator) {
   @return index($media-comparison-operators, $comparison-operator) != null;
-}
-
-@function is-range-media-feature-name($feature-name) {
-  @return index($MEDIA_RANGE_FEATURES, $feature-name) != null;
 }
 
 // $LESS_OPERATOR_SIGNS: ("<", "lt");
@@ -126,11 +150,11 @@ $MEDIA_RANGE_FEATURES: (
   @return "";
 }
 
-@function normalize-media-feature-value($comparison-operator, $value) {
+@function normalize-range-media-feature-value($comparison-operator, $value) {
   @if index((">", "gt"), $comparison-operator) != null {
-    @return $value + 1px;
+    @return $value + 1;
   } @else if index(("<", "lt"), $comparison-operator) != null {
-    @return $value - 1px;
+    @return $value - 1;
   }
 
   @return $value;
@@ -235,6 +259,79 @@ $MEDIA_RANGE_FEATURES: (
   @return $postfix;
 }
 
+// @function enclose-plain-media-feature-in-parentheses($name, $value) {
+//   @return '(#{$name}: #{$value})'
+// }
+
+@function postfix-to-media-queries($postfix) {
+  $operands-stack: ();
+  $media-queries: ();
+
+  @each $item in $postfix {
+    @if (is-operator($item)) {
+      $operator: $item;
+      $operand-1: last($operands-stack);
+      $operands-stack: pop($operands-stack);
+      $operand-2: last($operands-stack);
+      $operands-stack: pop($operands-stack);
+
+      // @debug $operand-1 $operand-2;
+
+      @if is-comparison-operator($operator) {
+        $media-feature: $operand-2;
+        $media-feature-value: $operand-1;
+
+        @if is-media-feature($media-feature-value) {
+          $temp: $media-feature;
+          $media-feature: $media-feature-value;
+          $media-feature-value: $temp;
+        }
+
+        @if (is-range-media-feature($media-feature)) {
+          $media-feature: normalize-range-media-feature-name(
+            $operator,
+            $media-feature
+          );
+          $media-feature-value: normalize-range-media-feature-value(
+            $operator,
+            $media-feature-value
+          );
+        }
+
+        $media-query: "(#{$media-feature}: #{$media-feature-value})";
+
+        // @debug $operand-1 $operand-1 $operator;
+        $operands-stack: push($operands-stack, $media-query);
+
+        // } @else {
+        //   @error 'Comparison operator "#{$operator}" should have 2 operands, ' +
+        //     'but got 1 "#{if($operand-1, $operand-1, $operand-2)}"';
+        // }
+      } @else if is-logical-operator($operator) {
+        @if $operator == $AND_OP {
+          $operands-stack: push(
+            $operands-stack,
+            "#{$operand-2} and #{$operand-1}"
+          );
+        } @else if $operator == $OR_OP {
+          $operands-stack: push(
+            $operands-stack,
+            "#{$operand-2}, #{$operand-1}"
+          );
+          // $operands-stack: push($operands-stack, $operand-2);
+          // $operands-stack: push($operands-stack, $operand-1);
+        }
+      } @else {
+        @error 'Unknown operator: "#{$item}"';
+      }
+    } @else {
+      $operands-stack: push($operands-stack, $item);
+    }
+  }
+
+  @return $operands-stack;
+}
+
 @function parse-media-query($expression) {
   $media-query: null;
 
@@ -254,7 +351,7 @@ $MEDIA_RANGE_FEATURES: (
         @error "Comparison operator '#{$comparison-operator}' is not valid";
       }
 
-      @if is-range-media-feature-name($media-feature-name) {
+      @if is-range-media-feature($media-feature-name) {
         $media-feature-name: normalize-range-media-feature-name(
           $comparison-operator,
           $media-feature-name
@@ -300,27 +397,66 @@ $MEDIA_RANGE_FEATURES: (
 }
 
 @debug $OPERATORS_PRECEDENCES;
+
+// width "<=" 500px "and" (width "<=" 1000px "or" width "<=" 600px) "and" width
+// "<=" 500px
 .debug {
   $list: 1 2 3 4 5 6;
+  $number: 5;
   list: $list;
   pop: pop((1 2));
   push: push((), 3);
-  last: last(());
+  last: last((1));
+  test: index($number, 5);
   operators: $OPERATORS;
   before-reverse: 1 2 3, 4 5;
   after-reverse: reverse((1 2 3, 4 5));
   infix: (width "<=" 500px "or" width "<=" 1000px "or" width "<=" 600px);
   posfix: to-postfix(
-    (width "<=" 500px "or" width "<=" 1000px) "and" width "<=" 600px "and"
-      (width "<=" 700 "or" width "<=" 800px)
+    width "<=" 500px "and" width "<=" 1000px "or" width "<=" 600px
+  );
+  media-query: postfix-to-media-queries(
+    to-postfix(
+      width "<=" 500px "and" width "<=" 1000px "or"
+        (width "<=" 600px "or" hover)
+    )
   );
   normalized-inifix: normalize-infix(
     (width "<=" 500px "or" width "<=" 1000px) "and" width "<=" 600px
   );
 }
+// 1
+// width "<=" 500px "or" width "<=" 1000px "and" width "<=" 600px
+// =>
+// (min-width: 500px), (win-width: 1000px) and (min-width: 600px)
+
+// 2
+// width "<=" 500px "and" width "<=" 1000px "or" width "<=" 600px "and" width "<=" 500px
+// =>
+// (min-width: 500px) and (win-width: 1000px), (win-width: 600px) and (min-width: 600)
+
+// 3
+// width "<=" 500px "and" ( width "<=" 1000px "or" width "<=" 600px ) "and" width "<=" 500px
+// =>
+// (min-width: 500px) and (win-width: 1000px), (win-width: 600px) and (min-width: 600)
+
 // @debug index($media-comparison-operators, "<");
-@include media(desktop) {
+// @include media(desktop) {
+//   .test {
+//     color: red;
+//   }
+// }
+
+$media-queries: "(min-width: 500px) and (min-width: 600px)",
+  "(min-width: 700px)";
+
+@media #{postfix-to-media-queries(
+    to-postfix(
+      width "<=" 500px "and" (width "<=" 1000px "or"
+        width "<=" 600px) "or" hover
+    )
+  )} {
   .test {
-    color: red;
+    hello: test;
   }
 }
