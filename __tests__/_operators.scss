@@ -1,0 +1,29 @@
+@import "../src/operators";
+
+$is-logical-or-operator-tests: (("or", true), ("||", true), ("", false));
+
+@include test-function(is-logical-or-operator, $is-logical-or-operator-tests);
+
+$is-logical-operator-tests: (
+  ("or", true),
+  ("||", true),
+  ("and", true),
+  ("&&", true),
+  ("==", false),
+  ("+", false),
+  ("===", false)
+);
+
+@include test-function(is-logical-operator, $is-logical-operator-tests);
+
+$is-comparison-operator-tests: (
+  ("<", true),
+  (">", true),
+  (">=", true),
+  ("<=", true),
+  ("==", true),
+  ("+", false),
+  ("===", false)
+);
+
+@include test-function(is-comparison-operator, $is-comparison-operator-tests);

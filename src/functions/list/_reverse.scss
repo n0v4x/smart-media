@@ -1,0 +1,15 @@
+@function reverse($list) {
+  $result: ();
+  $list-length: length($list);
+  $separator: list-separator($list);
+
+  @if $list-length > 1 {
+    @for $i from $list-length through 1 {
+      $result: append($result, nth($list, $i), $separator);
+    }
+  } @else {
+    $result: $list;
+  }
+
+  @return $result;
+}

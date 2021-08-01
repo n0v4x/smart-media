@@ -1,0 +1,39 @@
+@mixin test-function($function-name, $tests) {
+  @for $i from 1 through length($tests) {
+    $test-item: nth($tests, $i);
+    $function-param: nth($test-item, 1);
+    $function-return: nth($test-item, 2);
+    $function-has-multiple-params: if(
+      length($test-item) == 3,
+      nth($test-item, 3),
+      false
+    );
+
+    @include describe($function-name) {
+      $str-params: to-string($function-param);
+
+      @if type-of($function-param) ==
+        "list" and not
+        $function-has-multiple-params
+      {
+        $str-params: "(#{$str-params})";
+      }
+
+      @include describe("#{$i}) #{$function-name}(#{$str-params})") {
+        @include it(
+          "should return #{type-of($function-return)}: #{to-string($function-return)}"
+        ) {
+          $function: get-function($function-name);
+          @include assert-equal(
+            if(
+              $function-has-multiple-params,
+              call($function, $function-param...),
+              call($function, $function-param)
+            ),
+            $function-return
+          );
+        }
+      }
+    }
+  }
+}

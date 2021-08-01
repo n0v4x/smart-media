@@ -1,0 +1,45 @@
+@function to-media-query($postfix) {
+  $operands-stack: ();
+  $media-queries: ();
+
+  @each $item in $postfix {
+    @if (is-operator($item)) {
+      $operator: $item;
+      $operand-1: last($operands-stack);
+      $operands-stack: remove-last($operands-stack);
+      $operand-2: last($operands-stack);
+      $operands-stack: remove-last($operands-stack);
+
+      @if is-logical-and-operator($operator) {
+        $operands-stack: push(
+          $operands-stack,
+          "#{$operand-2} and #{$operand-1}"
+        );
+      } @else if is-logical-or-operator($operator) {
+        $operands-stack: push($operands-stack, "#{$operand-2}, #{$operand-1}");
+      } @else if is-comparison-operator($operator) {
+        $media-feature-name: $operand-2;
+        $media-feature-value: $operand-1;
+
+        @if is-media-feature($media-feature-value) {
+          $temp: $media-feature-name;
+          $media-feature-name: $media-feature-value;
+          $media-feature-value: $temp;
+        }
+
+        $media-feature: media-feature-to-string(
+          $media-feature-name,
+          $media-feature-value,
+          $operator
+        );
+        $operands-stack: push($operands-stack, $media-feature);
+      } @else {
+        @error 'Unknown operator: "#{$item}"';
+      }
+    } @else {
+      $operands-stack: push($operands-stack, $item);
+    }
+  }
+
+  @return $operands-stack;
+}

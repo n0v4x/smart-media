@@ -1,0 +1,22 @@
+$LT_OP: "<";
+$GT_OP: ">";
+$GE_OP: ">=";
+$LE_OP: "<=";
+$EQ_OP: "==";
+$AND_OP: "and";
+$OR_OP: "or";
+
+$OPERATORS_PRECEDENCES: (
+  $OR_OP: 0,
+  $AND_OP: 1,
+  $LT_OP: 2,
+  $GT_OP: 2,
+  $GE_OP: 2,
+  $LE_OP: 2,
+  $EQ_OP: 2,
+);
+
+$OPERATORS_WITH_TWO_OPERANDS: ($LT_OP, $GT_OP, $GE_OP, $LE_OP, $AND_OP, $OR_OP);
+$COMPARISON_OPERATORS: ($LT_OP, $GT_OP, $GE_OP, $LE_OP, $EQ_OP);
+$LOGICAL_OPERATORS: ($AND_OP, $OR_OP);
+$OPERATORS: join((), $LT_OP $GT_OP $GE_OP $LE_OP $EQ_OP $AND_OP $OR_OP, comma);

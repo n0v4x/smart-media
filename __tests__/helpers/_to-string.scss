@@ -1,0 +1,27 @@
+@function to-string($value) {
+  $result: "";
+
+  @if type-of($value) == "list" {
+    $list: $value;
+
+    @if length($list) > 0 {
+      $separator: if(list-separator($list) == space, " ", ", ");
+
+      @each $list-item in $list {
+        @if type-of($list-item) == "list" {
+          $list-item: "(#{to-string($list-item)})";
+        }
+
+        $result: if(
+          $result == "",
+          "#{$list-item}",
+          "#{$result}#{$separator}#{$list-item}"
+        );
+      }
+    }
+  } @else {
+    $result: "#{$value}";
+  }
+
+  @return $result;
+}

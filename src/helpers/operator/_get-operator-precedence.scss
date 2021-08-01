@@ -1,0 +1,11 @@
+@function get-operator-precedence($operator) {
+  @if is-logical-or-operator($operator) {
+    @return $logical-or-operator-precedence;
+  } @else if is-logical-and-operator($operator) {
+    @return $logical-and-operator-precedence;
+  } @else if is-comparison-operator($operator) {
+    @return $comparison-operators-precedence;
+  }
+
+  @error '"#{$operator}" is not an operator';
+}

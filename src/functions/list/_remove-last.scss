@@ -1,0 +1,12 @@
+@function remove-last($list) {
+  $result: ();
+  $separator: list-separator($list);
+
+  @if length($list) > 1 {
+    @for $i from 1 through length($list) - 1 {
+      $result: append($result, nth($list, $i), $separator);
+    }
+  }
+
+  @return $result;
+}

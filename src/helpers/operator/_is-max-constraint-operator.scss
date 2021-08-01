@@ -1,0 +1,4 @@
+@function is-max-constraint-operator($operator) {
+  @return index($lt-operator-sign, $operator) != null or
+    index($le-operator-sign, $operator);
+}

@@ -1,0 +1,42 @@
+@function is-media-feature($maybe-media-feature) {
+  @return index($MEDIA_FEATURES, $maybe-media-feature) != null;
+}
+
+@function is-range-media-feature($maybe-range-media-feature) {
+  @return index($MEDIA_RANGE_FEATURES, $maybe-range-media-feature) != null;
+}
+
+@function is-valid-comparison-operator($comparison-operator) {
+  @return index($media-comparison-operators, $comparison-operator) != null;
+}
+
+@function get-range-media-feature-prefix($comparison-operator) {
+  @if index(("<", "<=", "lt", "le"), $comparison-operator) != null {
+    @return "max-";
+  } @else if index((">", ">=", "gt", "ge"), $comparison-operator) != null {
+    @return "min-";
+  }
+
+  @return "";
+}
+
+@function normalize-range-media-feature-value($comparison-operator, $value) {
+  @if index((">", "gt"), $comparison-operator) != null {
+    @return $value + 1;
+  } @else if index(("<", "lt"), $comparison-operator) != null {
+    @return $value - 1;
+  }
+
+  @return $value;
+}
+
+@function normalize-range-media-feature-name(
+  $comparison-operator,
+  $media-feature-name
+) {
+  $media-feature-name-prefix: get-range-media-feature-prefix(
+    $comparison-operator
+  );
+
+  @return "#{$media-feature-name-prefix}#{$media-feature-name}";
+}

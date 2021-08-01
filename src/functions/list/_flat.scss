@@ -1,0 +1,14 @@
+@function flat($list) {
+  $result: ();
+  $separator: list-separator($list);
+
+  @each $list-item in $list {
+    @if type-of($list-item) == "list" {
+      $result: join($result, $list-item, $separator);
+    } @else {
+      $result: append($result, $list-item, $separator);
+    }
+  }
+
+  @return $result;
+}

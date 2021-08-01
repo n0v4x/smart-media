@@ -1,0 +1,45 @@
+// 1
+// width "<=" 500px "or" width "<=" 1000px "and" width "<=" 600px
+// =>
+// (min-width: 500px), (win-width: 1000px) and (min-width: 600px)
+
+// 2
+// width "<=" 500px "and" width "<=" 1000px "or" width "<=" 600px "and" width "<=" 500px
+// =>
+// (min-width: 500px) and (win-width: 1000px), (win-width: 600px) and (min-width: 600)
+
+// 3
+// width "<=" 500px "and" ( width "<=" 1000px "or" width "<=" 600px ) "and" width "<=" 500px
+// =>
+// (min-width: 500px) and (win-width: 1000px), (win-width: 600px) and (min-width: 600)
+
+$test-list: (
+  (
+    width "<=" 500px "or" width "<=" 1000px "and" width "<=" 600px,
+    "(min-width: 500px), (win-width: 1000px) and (min-width: 600px)"
+  ),
+  (
+    width "<=" 500px "and" width "<=" 1000px "or" width "<=" 600px "and" width
+      "<=" 500px,
+    "(min-width: 500px) and (win-width: 1000px), (win-width: 600px) and (min-width: 600)"
+  ),
+  (
+    width "<=" 500px "and" (width "<=" 1000px "or" width "<=" 600px) "and" width
+      "<=" 500px,
+    "(min-width: 500px) and (win-width: 1000px), (win-width: 600px) and (min-width: 600)"
+  )
+);
+
+// @for $i from 1 through length($test-list) {
+//   $test-item: nth($test-list, $i);
+//   $test-value: nth($test-item, 1);
+//   $test-answer: nth($test-item, 2);
+
+//   @include describe("to-media") {
+//     @include describe("#{$i}) to-media(#{to-string($test-value)})") {
+//       @include it("should convert expression list to media query string") {
+//         @include assert-equal(to-media($test-value), $test-answer);
+//       }
+//     }
+//   }
+// }

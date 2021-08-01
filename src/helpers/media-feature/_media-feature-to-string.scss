@@ -1,0 +1,36 @@
+@function media-feature-to-string(
+  $media-feature-name,
+  $media-feature-value: null,
+  $comparison-operator: null
+) {
+  $result: "";
+
+  @if $media-feature-value {
+    @if $comparison-operator {
+      @if is-comparison-operator($comparison-operator) {
+        @if not is-comparison-equal-operator($comparison-operator) {
+          $media-feature-name: normalize-range-media-feature-name(
+            $media-feature-name,
+            $comparison-operator
+          );
+          $media-feature-value: normalize-range-media-feature-value(
+            $media-feature-value,
+            $comparison-operator
+          );
+        }
+      } @else {
+        @error '"#{$comparison-operator}" in not comparison operator';
+      }
+    }
+
+    $result: "#{$media-feature-name}: #{$media-feature-value}";
+  } @else {
+    @if ($comparison-operator) {
+      @warn '"#{$media-feature-name}" doesn\'t have value to compare to';
+    }
+
+    $result: $media-feature-name;
+  }
+
+  @return "(#{$result})";
+}

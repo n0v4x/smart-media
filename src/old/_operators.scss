@@ -1,0 +1,56 @@
+$lt-operator-sign: "<" !default;
+$gt-operator-sign: ">" !default;
+$ge-operator-sign: ">=" !default;
+$le-operator-sign: "<=" !default;
+$eq-operator-sign: "==" !default;
+$and-operator-sign: ("and", "&&") !default;
+$or-operator-sign: ("or", "||") !default;
+
+$comparison-operators-signs: flat(
+  (
+    $lt-operator-sign,
+    $gt-operator-sign,
+    $ge-operator-sign,
+    $le-operator-sign,
+    $eq-operator-sign
+  )
+);
+
+$logical-operators-sings: flat(($and-operator-sign, $or-operator-sign));
+
+$comparison-operators-precedence: 2;
+$logical-and-operator-precedence: 1;
+$logical-or-operator-precedence: 0;
+
+@function is-comparison-operator($maybe-comparison-operator) {
+  @return index($comparison-operators-signs, $maybe-comparison-operator) != null;
+}
+
+@function is-logical-operator($maybe-logical-operator) {
+  @return index($logical-operators-sings, $maybe-logical-operator) != null;
+}
+
+@function is-operator($maybe-operator) {
+  @return is-logical-operator($maybe-operator) or
+    is-comparison-operator($maybe-operator);
+}
+
+@function is-logical-or-operator($maybe-logical-or-operator) {
+  @return index($or-operator-sign, $maybe-logical-or-operator) != null;
+}
+
+@function is-logical-and-operator($maybe-logical-and-operator) {
+  @return index($and-operator-sign, $maybe-logical-and-operator) != null;
+}
+
+@function get-operator-precedence($operator) {
+  @if is-logical-or-operator($operator) {
+    @return $logical-or-operator-precedence;
+  } @else if is-logical-and-operator($operator) {
+    @return $logical-and-operator-precedence;
+  } @else if is-comparison-operator($operator) {
+    @return $comparison-operators-precedence;
+  }
+
+  @error '"#{$operator}" is not an operator';
+}

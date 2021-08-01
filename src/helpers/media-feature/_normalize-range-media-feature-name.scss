@@ -1,0 +1,11 @@
+@function normalize-range-media-feature-name(
+  $media-feature-name,
+  $comparison-operator
+) {
+  $media-feature-prefix: get-range-media-feature-prefix(
+    $media-feature-name,
+    $comparison-operator
+  );
+
+  @return "#{$media-feature-prefix}#{$media-feature-name}";
+}

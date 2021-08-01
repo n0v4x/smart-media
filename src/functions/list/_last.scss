@@ -1,0 +1,9 @@
+@function last($list) {
+  $last-index: length($list);
+
+  @if $last-index < 1 {
+    @return null;
+  }
+
+  @return nth($list, $last-index);
+}

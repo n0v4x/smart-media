@@ -1,0 +1,10 @@
+@import "../src/helpers/";
+
+$tests: (
+  ((width, 768px, "<="), "(max-width: 768px)", true),
+  ((width, 768px, ">="), "(min-width: 768px)", true),
+  ((width, 768px, ">"), "(min-width: 769px)", true),
+  ((width, 768px, "<"), "(max-width: 767px)", true)
+);
+
+@include test-function(media-feature-to-string, $tests);

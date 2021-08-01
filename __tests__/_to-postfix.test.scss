@@ -1,0 +1,34 @@
+$test-list: (
+  (
+    (
+      width "<=" 500px "and" (width "<=" 1000px "or" width "<=" 600px) "and"
+        hover
+    ),
+    (width 500px "<=" width 1000px "<=" width 600px "<=" "or" "and" hover "and")
+  ),
+  (
+    (
+      width "<=" 500px "and" (width "<=" 1000px "or" width "<=" 600px) "and"
+        hover
+    ),
+    (width 500px "<=" width 1000px "<=" width 600px "<=" "or" "and" hover "and")
+  )
+);
+
+@for $i from 1 through length($test-list) {
+  $test-item: nth($test-list, $i);
+  $test-value: nth($test-item, 1);
+  $test-answer: nth($test-item, 2);
+
+  @include describe("to-postfix") {
+    @include describe("#{$i}) to-postfix(#{to-string($test-value)})") {
+      @include it("should convert expression list to postfix notation list") {
+        @include assert-equal(to-postfix($test-value), $test-answer);
+      }
+    }
+  }
+}
+
+//
+
+// $: ("");

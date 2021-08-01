@@ -1,0 +1,4 @@
+@function is-operator($maybe-operator) {
+  @return is-logical-operator($maybe-operator) or
+    is-comparison-operator($maybe-operator);
+}

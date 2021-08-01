@@ -1,0 +1,3 @@
+@function is-logical-and-operator($maybe-logical-and-operator) {
+  @return index($and-operator-sign, $maybe-logical-and-operator) != null;
+}

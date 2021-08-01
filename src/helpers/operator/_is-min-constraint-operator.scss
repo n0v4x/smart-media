@@ -1,0 +1,4 @@
+@function is-min-constraint-operator($operator) {
+  @return index($gt-operator-sign, $operator) != null or
+    index($ge-operator-sign, $operator);
+}

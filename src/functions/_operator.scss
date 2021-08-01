@@ -1,0 +1,23 @@
+@function is-operator($maybe-operator) {
+  @return index($OPERATORS, $maybe-operator) != null;
+}
+
+@function is-operator-have-two-operands($operator) {
+  @return index($OPERATORS_WITH_TWO_OPERANDS, $operator) != null;
+}
+
+@function is-comparison-operator($maybe-comparison-operator) {
+  @return index($COMPARISON_OPERATORS, $maybe-comparison-operator);
+}
+
+@function is-logical-operator($maybe-logical-operator) {
+  @return index($LOGICAL_OPERATORS, $maybe-logical-operator);
+}
+
+@function get-operator-precedence($operator) {
+  @if not is-operator($operator) {
+    @error '"#{$operator}" is not an operator';
+  }
+
+  @return map-get($OPERATORS_PRECEDENCES, $operator);
+}

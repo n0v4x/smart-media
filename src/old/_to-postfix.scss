@@ -1,0 +1,44 @@
+@function to-postfix($expression) {
+  $normalized-infix-list: normalize-expression($expression);
+  $postfix: ();
+  $operators-stack: ();
+
+  @each $item in $normalized-infix-list {
+    @if (is-operator($item)) {
+      $operator-1: $item;
+      $operator-2: last($operators-stack);
+
+      @while (
+        is-operator($operator-2) and
+          (
+            get-operator-precedence($operator-1) <=
+              get-operator-precedence($operator-2)
+          )
+      ) {
+        $postfix: push($postfix, $operator-2);
+        $operators-stack: pop($operators-stack);
+        $operator-2: last($operators-stack);
+      }
+
+      $operators-stack: push($operators-stack, $operator-1);
+    } @else if $item == "(" {
+      $operators-stack: push($operators-stack, $item);
+    } @else if $item == ")" {
+      @while last($operators-stack) != "(" {
+        $postfix: push($postfix, last($operators-stack));
+        $operators-stack: pop($operators-stack);
+      }
+
+      // remove ")"
+      $operators-stack: pop($operators-stack);
+    } @else {
+      $postfix: push($postfix, $item);
+    }
+  }
+
+  @each $operator in reverse($operators-stack) {
+    $postfix: push($postfix, $operator);
+  }
+
+  @return $postfix;
+}

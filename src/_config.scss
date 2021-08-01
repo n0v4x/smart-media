@@ -1,0 +1,38 @@
+/* operators */
+$lt-operator-sign: "<" !default;
+$gt-operator-sign: ">" !default;
+$ge-operator-sign: ">=" !default;
+$le-operator-sign: "<=" !default;
+$eq-operator-sign: "==" !default;
+$and-operator-sign: ("and", "&&") !default;
+$or-operator-sign: ("or", "||") !default;
+
+$comparison-operators-signs: flat(
+  (
+    $lt-operator-sign,
+    $gt-operator-sign,
+    $ge-operator-sign,
+    $le-operator-sign,
+    $eq-operator-sign
+  )
+);
+$logical-operators-sings: flat(($and-operator-sign, $or-operator-sign));
+
+$comparison-operators-precedence: 2;
+$logical-and-operator-precedence: 1;
+$logical-or-operator-precedence: 0;
+
+/* media features */
+$range-media-features: (
+  "width",
+  "height",
+  "device-width",
+  "device-height",
+  "aspect-ratio",
+  "device-aspect-ratio" "color",
+  "color-index",
+  "monochrome",
+  "resolution"
+);
+
+$media-features: $range-media-features;

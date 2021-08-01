@@ -1,0 +1,19 @@
+@function normalize-expression($expression) {
+  $result: ();
+
+  @each $item in $expression {
+    @if type-of($item) == "list" {
+      $result: push($result, "(");
+
+      @each $sub-item in normalize-expression($item) {
+        $result: push($result, $sub-item);
+      }
+
+      $result: push($result, ")");
+    } @else {
+      $result: push($result, $item);
+    }
+  }
+
+  @return $result;
+}

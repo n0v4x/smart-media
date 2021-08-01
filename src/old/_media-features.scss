@@ -1,0 +1,58 @@
+@function is-media-feature($maybe-media-feature) {
+  @return index($media-features $maybe-media-feature) != null;
+}
+
+@function is-range-media-feature($maybe-range-media-feature) {
+  @return index($range-media-features, $maybe-range-media-feature) != null;
+}
+
+@function is-min-condition-range-media-feature-operator($operator) {
+  @return index($gt-operator-sign, $operator) != null or
+    index($ge-operator-sign, $operator);
+}
+
+@function is-max-condition-range-media-feature-operator($operator) {
+  @return index($lt-operator-sign, $operator) != null or
+    index($le-operator-sign, $operator);
+}
+
+@function get-range-media-feature-prefix(
+  $range-media-feature,
+  $comparison-operator
+) {
+  @if not is-range-media-feature($range-media-feature) {
+    @error '"#{$range-media-feature}" is not range media feature';
+  }
+
+  @if not is-comparison-operator($comparison-operator) {
+    @error '"#{$comparison-operator}" is not comparison operator';
+  }
+
+  @if is-min-condition-range-media-feature-operator($comparison-operator) {
+    @return "max-";
+  } @else if is-max-condition-range-media-feature-operator($comparison-operator)
+  {
+    @return "min-";
+  }
+
+  @return "";
+}
+
+@function normalize-range-media-feature-value($comparison-operator, $value) {
+  @if index($gt-operator-sign, $comparison-operator) {
+    @return $value + 1;
+  } @else if index($lt-operator-sign, $comparison-operator) {
+    @return $value - 1;
+  }
+
+  @return $value;
+}
+
+@function normalize-range-media-feature($media-feature, $comparison-operator) {
+  $media-feature-prefix: get-range-media-feature-prefix(
+    $media-feature,
+    $comparison-operator
+  );
+
+  @return "#{$media-feature-name-prefix}#{$media-feature-name}";
+}

@@ -1,0 +1,68 @@
+@function postfix-to-media-query($postfix) {
+  $operands-stack: ();
+  $media-queries: ();
+
+  @each $item in $postfix {
+    @if (is-operator($item)) {
+      $operator: $item;
+      $operand-1: last($operands-stack);
+      $operands-stack: pop($operands-stack);
+      $operand-2: last($operands-stack);
+      $operands-stack: pop($operands-stack);
+
+      // @debug $operand-1 $operand-2;
+
+      @if is-comparison-operator($operator) {
+        $media-feature: $operand-2;
+        $media-feature-value: $operand-1;
+
+        @if is-media-feature($media-feature-value) {
+          $temp: $media-feature;
+          $media-feature: $media-feature-value;
+          $media-feature-value: $temp;
+        }
+
+        @if (is-range-media-feature($media-feature)) {
+          $media-feature: normalize-range-media-feature-name(
+            $operator,
+            $media-feature
+          );
+          $media-feature-value: normalize-range-media-feature-value(
+            $operator,
+            $media-feature-value
+          );
+        }
+
+        $media-query: "(#{$media-feature}: #{$media-feature-value})";
+
+        // @debug $operand-1 $operand-1 $operator;
+        $operands-stack: push($operands-stack, $media-query);
+
+        // } @else {
+        //   @error 'Comparison operator "#{$operator}" should have 2 operands, ' +
+        //     'but got 1 "#{if($operand-1, $operand-1, $operand-2)}"';
+        // }
+      } @else if is-logical-operator($operator) {
+        @if $operator == $AND_OP {
+          $operands-stack: push(
+            $operands-stack,
+            "#{$operand-2} and #{$operand-1}"
+          );
+        } @else if $operator == $OR_OP {
+          $operands-stack: push(
+            $operands-stack,
+            "#{$operand-2}, #{$operand-1}"
+          );
+          // $operands-stack: push($operands-stack, $operand-2);
+          // $operands-stack: push($operands-stack, $operand-1);
+        }
+      } @else {
+        @error 'Unknown operator: "#{$item}"';
+      }
+    } @else {
+      $operands-stack: push($operands-stack, $item);
+    }
+  }
+
+  @return $operands-stack;
+}
